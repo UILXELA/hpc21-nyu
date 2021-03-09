@@ -1,2 +1,2 @@
-# hpc21-nyu
+# HPC21-NYU
 homework repo

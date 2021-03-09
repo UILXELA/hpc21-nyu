@@ -1,0 +1,16 @@
+Sample run:
+Reference time: 11.7076
+Taylor time:    19.3027      Error: 6.928125e-12
+Intrin time:    0.6255      Error: 6.928125e-12
+Vector time:    0.5580      Error: 2.454130e-03
+
+As shown, the precision is raised to 12 digits for the intrinsic case.
+
+I had a try on the extra credit. As I understood the question, because the farther the input is from the 0 point, the lower the precision is. So the question asks us to use [pi/4,-pi/4] as the domain of the input to the talor series and evaluation sin(x) for any real number x. My solution is:
+in [3pi/4,5pi/4] sin(x)=sin(pi-x)
+in [pi/4,3pi/4] sin(x)=cos(x-pi/2)
+and in [5pi/4,7pi/4] sin(x)=-cos(3pi/2-x)
+
+So we can use sin(thetha) and cos(theta) with theta in [-pi/4,pi/4] to express sin(x). In the code, I first translate the input value to [0,2pi] and then use if-else clauses to use the corresponding formula for different domains. For AVX, the process is the same but because the 4 elements are not separated and processed as a vector, both sine and cosine are executed (2x the work) and the correct results are picked out afterwards. Both sin_taylor and sin_intrin works with the ideal precisions but they run very slow due to the preprocessing before the actual computations. 
+
+The code blocks are commented out in the file. You can comment out the other version of the two functions instead to test the code for the challenge.
