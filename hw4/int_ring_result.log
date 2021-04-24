@@ -1,0 +1,27 @@
+Rank 0/24 running on cs046.nyu.cluster.
+The final message is 2760000
+Time elapsed is 0.259854 s for 10000 loops among 24 processes
+Latency is 0.001083 ms.
+Rank 17/24 running on cs148.nyu.cluster.
+Rank 12/24 running on cs058.nyu.cluster.
+Rank 1/24 running on cs047.nyu.cluster.
+Rank 5/24 running on cs051.nyu.cluster.
+Rank 14/24 running on cs145.nyu.cluster.
+Rank 2/24 running on cs048.nyu.cluster.
+Rank 6/24 running on cs052.nyu.cluster.
+Rank 15/24 running on cs146.nyu.cluster.
+Rank 4/24 running on cs050.nyu.cluster.
+Rank 11/24 running on cs057.nyu.cluster.
+Rank 16/24 running on cs147.nyu.cluster.
+Rank 3/24 running on cs049.nyu.cluster.
+Rank 21/24 running on cs152.nyu.cluster.
+Rank 10/24 running on cs056.nyu.cluster.
+Rank 9/24 running on cs055.nyu.cluster.
+Rank 8/24 running on cs054.nyu.cluster.
+Rank 7/24 running on cs053.nyu.cluster.
+Rank 13/24 running on cs059.nyu.cluster.
+Rank 23/24 running on cs154.nyu.cluster.
+Rank 22/24 running on cs153.nyu.cluster.
+Rank 20/24 running on cs151.nyu.cluster.
+Rank 18/24 running on cs149.nyu.cluster.
+Rank 19/24 running on cs150.nyu.cluster.

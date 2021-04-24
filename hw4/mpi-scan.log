@@ -1,0 +1,7 @@
+Rank 2/4 running on cs379.nyu.cluster.
+Rank 1/4 running on cs378.nyu.cluster.
+Rank 3/4 running on cs380.nyu.cluster.
+Rank 0/4 running on cs377.nyu.cluster.
+error = 0
+sequential-scan = 0.192729s
+parallel-scan   = 0.438670s

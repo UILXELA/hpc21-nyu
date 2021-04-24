@@ -1,0 +1,26 @@
+Rank 0/24 running on cs210.nyu.cluster.
+Time elapsed is 3.874143 s for 1000 loops among 24 processes
+Bandwidth is 12.389837 GB/s.
+Rank 15/24 running on cs499.nyu.cluster.
+Rank 19/24 running on cs503.nyu.cluster.
+Rank 2/24 running on cs212.nyu.cluster.
+Rank 6/24 running on cs216.nyu.cluster.
+Rank 5/24 running on cs215.nyu.cluster.
+Rank 1/24 running on cs211.nyu.cluster.
+Rank 12/24 running on cs222.nyu.cluster.
+Rank 16/24 running on cs500.nyu.cluster.
+Rank 13/24 running on cs223.nyu.cluster.
+Rank 14/24 running on cs224.nyu.cluster.
+Rank 20/24 running on cs504.nyu.cluster.
+Rank 23/24 running on cs507.nyu.cluster.
+Rank 3/24 running on cs213.nyu.cluster.
+Rank 4/24 running on cs214.nyu.cluster.
+Rank 17/24 running on cs501.nyu.cluster.
+Rank 18/24 running on cs502.nyu.cluster.
+Rank 11/24 running on cs221.nyu.cluster.
+Rank 21/24 running on cs505.nyu.cluster.
+Rank 22/24 running on cs506.nyu.cluster.
+Rank 7/24 running on cs217.nyu.cluster.
+Rank 10/24 running on cs220.nyu.cluster.
+Rank 8/24 running on cs218.nyu.cluster.
+Rank 9/24 running on cs219.nyu.cluster.
