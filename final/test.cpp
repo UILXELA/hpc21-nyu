@@ -15,8 +15,9 @@
 #endif
 #include <unordered_map>
 
+//#define SIZE 18833843
 #define SIZE 18833843
-#define PT_COUNT 10
+#define PT_COUNT 100
 
 const int MAX_LAYERS = 19; //follows the max_level possible defined by p4est
 const int MAX_REFINE_LEVEL = 17;
@@ -87,10 +88,10 @@ static void my_init_fn_first (p8est_t * p4est, p4est_topidx_t which_tree,
 
   octants_map[data->bin_ind] = data;
 
-  std::cerr << quadrant->x << std::endl;
-  std::cerr << quadrant->y << std::endl;
-  std::cerr << quadrant->z << std::endl;
-  std::cerr << "Level" << (int) quadrant->level << std::endl;
+  //std::cerr << quadrant->x << std::endl;
+  //std::cerr << quadrant->y << std::endl;
+  //std::cerr << quadrant->z << std::endl;
+  //std::cerr << "Level" << (int) quadrant->level << std::endl;
   //std::cerr << data2->c_x << " ";
 
   return;
@@ -195,6 +196,11 @@ int main(int argc, char** argv)
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &size);
 
+  char processor_name[MPI_MAX_PROCESSOR_NAME];
+  int name_len;
+  MPI_Get_processor_name(processor_name, &name_len);
+  printf("Rank %d/%d running on %s.\n", rank, size, processor_name);
+
   int num_threads = 1;
 	#ifdef _OPENMP
 		num_threads = omp_get_max_threads();
@@ -224,12 +230,25 @@ int main(int argc, char** argv)
   double* randn = (double *)malloc(SIZE * 3 * sizeof(double));
 
   //char buff[256];
+  /*
   FILE *latfile;
 
   //sprintf(buff,"%s","./test.bin");
   latfile=fopen("test.bin","r");
   fread(randn,sizeof(double),SIZE*3,latfile);
   fclose(latfile);
+  */
+  MPI_File fh;
+  MPI_Offset offset;
+  int count;
+ 
+  MPI_File_open(MPI_COMM_WORLD, "./test.bin",MPI_MODE_RDONLY, MPI_INFO_NULL, &fh);
+  int n_pts = (int) SIZE/size; 
+  offset = rank * n_pts * 3 * sizeof(double);
+  MPI_File_read_at(fh, offset, randn, n_pts, MPI_DOUBLE, &status); 
+  MPI_Get_count(&status, MPI_DOUBLE, &count); 
+  printf("process %d read %d ints\n", rank, count); 
+  MPI_File_close(&fh); 
 
   
   double min_x,min_y,min_z = DBL_MAX;
@@ -241,6 +260,7 @@ int main(int argc, char** argv)
   initial_side_len = std::max({max_x-min_x, max_y-min_y, max_z-min_z});
   x_bound = y_bound = z_bound = TOTAL_LENGTH;
   res =  initial_side_len / x_bound;
+  /*
   std::cerr << max_x << std::endl;
   std::cerr << min_x << std::endl;
   std::cerr << max_y << std::endl;
@@ -250,14 +270,14 @@ int main(int argc, char** argv)
   std::cerr << initial_side_len << std::endl;
   std::cerr << res << std::endl;
   std::cerr << x_bound << std::endl;
-
+  */
   int x_offset, y_offset, z_offset;
   x_offset = -floor(min_x/res);
   y_offset = -floor(min_y/res);
   z_offset = -floor(min_z/res);
-  std::cerr << x_offset << std::endl;
-  std::cerr << y_offset << std::endl;
-  std::cerr << z_offset << std::endl;
+  //std::cerr << x_offset << std::endl;
+  //std::cerr << y_offset << std::endl;
+  //std::cerr << z_offset << std::endl;
 
   
 
@@ -270,7 +290,7 @@ int main(int argc, char** argv)
   double t = MPI_Wtime();
   discretize(SIZE, randn, res, x_offset, y_offset, z_offset, &pts_discrete);
   double elapsed1 = MPI_Wtime() - t;
-  std::cerr << "Discretize Elapsed time: " << elapsed1 << std::endl;
+  //std::cerr << "Discretize Elapsed time: " << elapsed1 << std::endl;
   
   //ind = 0;
 
@@ -284,7 +304,7 @@ int main(int argc, char** argv)
 */
   MPI_Barrier(MPI_COMM_WORLD);
   p8est = p8est_new(mpi->mpicomm, connectivity,sizeof(user_data_t), init_fn_first, NULL);
-  std::cerr << "new finished";
+  //std::cerr << "new finished";
 
 
   std::vector<int> pt2bin_map_x = std::vector<int>(SIZE,(*(octants_map.begin())).second->c_x);   //follow the order of pts, save the bin_id in coord and bin to avoid recalc
@@ -310,6 +330,8 @@ int main(int argc, char** argv)
     cnts_map.clear();
 
     p8est_refine (p8est, 0, refine_fn, init_fn);
+
+    
     
     //cnts_map.reserve(octants_map.size());
     //#pragma omp parallel for
@@ -317,13 +339,15 @@ int main(int argc, char** argv)
       cnts_map[((it)->first)] = 0;
       //std::cerr << ((it)->first) << std::endl;
     }
-    std::cerr << "map size" << octants_map.size() << std::endl;
-    std::cerr << "cnt size" << cnts_map.size() << std::endl;
+    //std::cerr << "map size" << octants_map.size() << std::endl;
+    //std::cerr << "cnt size" << cnts_map.size() << std::endl;
 
-    std::cerr<<"count init Done" << std::endl;
+    //std::cerr<<"count init Done" << std::endl;
 
-
-    #pragma omp parallel for schedule(static,32) //reduction(umap_reduction:cnts_map)
+    #pragma omp parallel
+    {
+      
+    #pragma omp for schedule(static,4096) //reduction(umap_reduction:cnts_map)
     for(long i=0;i<SIZE;i++){
       long bin_id = C_LENGTHsq*(pt2bin_map_x[i]/BTW_C-1)+C_LENGTH*(pt2bin_map_y[i]/BTW_C-1)+pt2bin_map_z[i]/BTW_C-1;
       int half_side_len = x_bound >> (pt2bin_map_level[i]+1);
@@ -357,9 +381,9 @@ int main(int argc, char** argv)
         //cnts_map[bin_id] = octants_map[bin_id]->count;
       }
     }
-    std::cerr << "Exit main loop " << std::endl;
+    //std::cerr << "Exit main loop " << std::endl;
     
-    //#pragma omp parallel for schedule(static,1024) reduction(umap_reduction:cnts_map)
+    #pragma omp for schedule(static,1024) reduction(umap_reduction:cnts_map)
     for(long i=0;i<SIZE;i++){
       long bin_id = C_LENGTHsq*(pt2bin_map_x[i]/BTW_C-1)+C_LENGTH*(pt2bin_map_y[i]/BTW_C-1)+pt2bin_map_z[i]/BTW_C-1;
 
@@ -367,26 +391,24 @@ int main(int argc, char** argv)
 
     }
     
-    std::cerr << "Exit count loop " << std::endl;
+    //std::cerr << "Exit count loop " << std::endl;
 
     //std::cerr<<"Exited loop" << std::endl;
     //long w=0;
-    //#pragma omp parallel for
-    //for(size_t b=0;b<cnts_map.bucket_count();b++){
-    for(auto it = cnts_map.begin(); it != cnts_map.end(); ++it){
+    #pragma omp for
+    for(size_t b=0;b<cnts_map.bucket_count();b++){
+    for(auto it = cnts_map.begin(b); it != cnts_map.end(b); ++it){
       //std::cerr << (it)->first << std::endl;
       octants_map[((it)->first)]->count = ((it)->second);
       //w+=((it)->second);
       
-    //}  
+    }  
+    }
     }
 
     //std::cerr << "Period size ";
     //std::cerr << w << std::endl;
 
-
-
-    MPI_Barrier(MPI_COMM_WORLD);
     
     /*
     int i=0;
@@ -424,19 +446,19 @@ int main(int argc, char** argv)
 
   MPI_Barrier(MPI_COMM_WORLD);
   
-  std::cerr << "Mem free" << std::endl;
+  //std::cerr << "Mem free" << std::endl;
 
   free(randn);
   v->clear();
   delete v;
 
-  std::cerr << "Reach 4est destroy" << std::endl;
+  //std::cerr << "Reach 4est destroy" << std::endl;
 
   p8est_destroy (p8est);
 
   p8est_connectivity_destroy (connectivity);
 
-  std::cerr << "Reach MPI destroy" << std::endl;
+  //std::cerr << "Reach MPI destroy" << std::endl;
   /* clean up and exit */
   //sc_finalize ();
 

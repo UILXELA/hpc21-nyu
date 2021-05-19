@@ -16,7 +16,7 @@
 #define SIZE 18833843
 #define MAX_LAYERS 19 //follows the max_level possible defined by p4est
 #define TOTAL_LENGTH std::pow(2,MAX_LAYERS)
-#define PT_COUNT 10
+#define PT_COUNT 100
 //#define DBL_MAX std::numeric_limits<double>::max()
 //#define DBL_MIN std::numeric_limits<double>::min()
 void get_boundary(long data_size,double* data_ptr, double& max_x, double& max_y, double& max_z,double& min_x, double& min_y, double& min_z);
@@ -152,7 +152,7 @@ my_refine_fn (p8est_t * p4est, p4est_topidx_t which_tree,
       bins_p[i].reserve(data->count);
       //bins[i]->reserve(SIZE);
     } 
-      #pragma omp for nowait schedule(static,4096)
+      #pragma omp for nowait schedule(static)
       for(long i=0; i<to_split->size(); i++){
         //std::cerr << i  << std::endl;
         int sub_ind = 0;
@@ -275,13 +275,24 @@ int main(int argc, char** argv)
   double* randn = (double *)malloc(SIZE * 3 * sizeof(double));
 
   //char buff[256];
-  FILE *latfile;
+  //FILE *latfile;
 
   //sprintf(buff,"%s","./test.bin");
-  latfile=fopen("test.bin","r");
-  fread(randn,sizeof(double),SIZE*3,latfile);
-  fclose(latfile);
+  //latfile=fopen("test.bin","r");
+  //fread(randn,sizeof(double),SIZE*3,latfile);
+  //fclose(latfile);
 
+  MPI_File fh;
+  MPI_Offset offset;
+  int count;
+ 
+  MPI_File_open(MPI_COMM_WORLD, "./test.bin",MPI_MODE_RDONLY, MPI_INFO_NULL, &fh);
+  int n_pts = (int) SIZE/size; 
+  offset = rank * n_pts * 3 * sizeof(double);
+  MPI_File_read_at(fh, offset, randn, n_pts, MPI_DOUBLE, &status); 
+  MPI_Get_count(&status, MPI_DOUBLE, &count); 
+  printf("process %d read %d ints\n", rank, count); 
+  MPI_File_close(&fh); 
   
   double min_x,min_y,min_z = DBL_MAX;
   double max_x,max_y,max_z = DBL_MIN;
@@ -347,7 +358,6 @@ int main(int argc, char** argv)
     //mpiret = sc_MPI_Barrier (mpi->mpicomm);
 
     p8est_refine (p8est, 0, refine_fn, init_fn);
-    MPI_Barrier(MPI_COMM_WORLD);
 
     //mpiret = sc_MPI_Barrier (mpi->mpicomm);
 
@@ -364,7 +374,7 @@ int main(int argc, char** argv)
 
   std::cerr << "Refine Elapsed time: " << elapsed << std::endl;
 
-  //mpiret = sc_MPI_Barrier (mpi->mpicomm);
+  mpiret = sc_MPI_Barrier (mpi->mpicomm);
 
   long w = 0;
   std::cerr << std::endl << v->size() << std::endl;
