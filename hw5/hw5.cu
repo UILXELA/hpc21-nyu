@@ -219,9 +219,12 @@ int main() {
 
   cudaFree(x_d);
   cudaFree(mat_d);
-  cudaFree(vec_result);
+  cudaFree(vec_result_d);
   cudaFreeHost(x);
-  cudaFreeHost(mat);
+  delete [] mat;
+  delete [] (vec_result_ref);
+  delete [] vec_result;
+
 
   return 0;
 }
