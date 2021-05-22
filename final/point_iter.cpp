@@ -227,7 +227,7 @@ int main(int argc, char** argv)
 
 
   /* later changed 'double' to 'int', but that still had issues */
-  double* randn = (double *)malloc(SIZE * 3 * sizeof(double));
+  double* original = (double *)malloc(SIZE * 3 * sizeof(double));
 
   //char buff[256];
   /*
@@ -235,7 +235,7 @@ int main(int argc, char** argv)
 
   //sprintf(buff,"%s","./test.bin");
   latfile=fopen("test.bin","r");
-  fread(randn,sizeof(double),SIZE*3,latfile);
+  fread(original,sizeof(double),SIZE*3,latfile);
   fclose(latfile);
   */
   MPI_File fh;
@@ -245,7 +245,7 @@ int main(int argc, char** argv)
   MPI_File_open(MPI_COMM_WORLD, "./test.bin",MPI_MODE_RDONLY, MPI_INFO_NULL, &fh);
   int n_pts = (int) SIZE/size; 
   offset = rank * n_pts * 3 * sizeof(double);
-  MPI_File_read_at(fh, offset, randn, n_pts, MPI_DOUBLE, &status); 
+  MPI_File_read_at(fh, offset, original, n_pts, MPI_DOUBLE, &status); 
   MPI_Get_count(&status, MPI_DOUBLE, &count); 
   printf("process %d read %d ints\n", rank, count); 
   MPI_File_close(&fh); 
@@ -254,7 +254,7 @@ int main(int argc, char** argv)
   double min_x,min_y,min_z = DBL_MAX;
   double max_x,max_y,max_z = DBL_MIN;
 
-  get_boundary(SIZE,randn,max_x,max_y,max_z,min_x,min_y,min_z);
+  get_boundary(SIZE,original,max_x,max_y,max_z,min_x,min_y,min_z);
   double initial_side_len;
   double res;
   initial_side_len = std::max({max_x-min_x, max_y-min_y, max_z-min_z});
@@ -280,15 +280,12 @@ int main(int argc, char** argv)
   //std::cerr << z_offset << std::endl;
 
   
-
-  v = new std::vector<std::vector<long>*>();
-  v->reserve(8);
   std::vector<long> pts_discrete = std::vector<long>(SIZE * 3);
 
   octants_map.reserve(SIZE);
 
   double t = MPI_Wtime();
-  discretize(SIZE, randn, res, x_offset, y_offset, z_offset, &pts_discrete);
+  discretize(SIZE, original, res, x_offset, y_offset, z_offset, &pts_discrete);
   double elapsed1 = MPI_Wtime() - t;
   //std::cerr << "Discretize Elapsed time: " << elapsed1 << std::endl;
   
@@ -448,9 +445,7 @@ int main(int argc, char** argv)
   
   //std::cerr << "Mem free" << std::endl;
 
-  free(randn);
-  v->clear();
-  delete v;
+  free(original);
 
   //std::cerr << "Reach 4est destroy" << std::endl;
 

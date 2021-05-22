@@ -144,21 +144,6 @@ void parallel_sort(BidirIt _First, BidirIt _Last)
 
 
 
-
-
-void reduce_umaps(\
-    std::unordered_map<long, long>& output, \
-    std::unordered_map<long, long>& input)
-{
-    for (auto& X : input) {
-      output.at(X.first) += X.second; //Will throw if X.first doesn't exist in output. 
-    }
-}
-#pragma omp declare reduction(umap_reduction : \
-    std::unordered_map<long, long> : \
-    reduce_umaps(omp_out, omp_in)) \
-    initializer(omp_priv(omp_orig))
-
 typedef struct
 {
   sc_MPI_Comm         mpicomm;
@@ -350,7 +335,7 @@ int main(int argc, char** argv)
 
 
   /* later changed 'double' to 'int', but that still had issues */
-  double* randn = (double *)malloc(SIZE * 3 * sizeof(double));
+  double* original = (double *)malloc(SIZE * 3 * sizeof(double));
 
   MPI_File fh;
   MPI_Offset offset;
@@ -359,7 +344,7 @@ int main(int argc, char** argv)
   MPI_File_open(MPI_COMM_WORLD, "./test.bin",MPI_MODE_RDONLY, MPI_INFO_NULL, &fh);
   int n_pts = (int) SIZE/size; 
   offset = rank * n_pts * 3 * sizeof(double);
-  MPI_File_read_at(fh, offset, randn, n_pts, MPI_DOUBLE, &status); 
+  MPI_File_read_at(fh, offset, original, n_pts, MPI_DOUBLE, &status); 
   MPI_Get_count(&status, MPI_DOUBLE, &count); 
   printf("process %d read %d ints\n", rank, count); 
   MPI_File_close(&fh); 
@@ -368,7 +353,7 @@ int main(int argc, char** argv)
   double min_x,min_y,min_z = DBL_MAX;
   double max_x,max_y,max_z = DBL_MIN;
 
-  get_boundary(SIZE,randn,max_x,max_y,max_z,min_x,min_y,min_z);
+  get_boundary(SIZE,original,max_x,max_y,max_z,min_x,min_y,min_z);
   double initial_side_len;
   double res;
   initial_side_len = std::max({max_x-min_x, max_y-min_y, max_z-min_z});
@@ -400,7 +385,7 @@ int main(int argc, char** argv)
 
 
   double t = MPI_Wtime();
-  discretize(SIZE, randn, res, x_offset, y_offset, z_offset, &pts_discrete);
+  discretize(SIZE, original, res, x_offset, y_offset, z_offset, &pts_discrete);
 
   std::cerr << *(max_element(pts_discrete.begin(),pts_discrete.end())) << std::endl;
   std::cerr << *(min_element(pts_discrete.begin(),pts_discrete.end())) << std::endl;
@@ -545,7 +530,7 @@ int main(int argc, char** argv)
   
   std::cerr << "Mem free" << std::endl;
 
-  free(randn);
+  free(original);
 
   std::cerr << "Reach 4est destroy" << std::endl;
 
