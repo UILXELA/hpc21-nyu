@@ -1,0 +1,37 @@
+cuda4: GeForce GTX TITAN X 12GB
+======= Vector Inner Product ========
+CPU Bandwidth = 8.655288 GB/s
+GPU Bandwidth = 68.303821 GB/s
+Error = 0.000000
+
+======= Matrix-Vector Multiplication ========
+CPU Bandwidth = 3.076310 GB/s
+GPU Bandwidth = 15.528422 GB/s
+Error = 0.000000
+
+
+
+cuda2: GeForce RTX 2080 Ti 11GB
+======= Vector Inner Product ========
+CPU Bandwidth = 7.332117 GB/s
+GPU Bandwidth = 142.222351 GB/s
+Error = 0.000000
+
+======= Matrix-Vector Multiplication ========
+CPU Bandwidth = 3.135297 GB/s
+GPU Bandwidth = 16.611584 GB/s
+Error = 0.000000
+
+
+
+
+cuda1: GeForce GTX TITAN Black 6GB
+======= Vector Inner Product ========
+CPU Bandwidth = 11.756446 GB/s
+GPU Bandwidth = 66.479345 GB/s
+Error = 0.000000
+
+======= Matrix-Vector Multiplication ========
+CPU Bandwidth = 3.580828 GB/s
+GPU Bandwidth = 6.080284 GB/s
+Error = 0.000000
