@@ -39,3 +39,7 @@ In terms of parallelism: bin_iter.cpp > mem_heavy.cpp > point_iter.cpp.
 'bin_iter.cpp' uses a parallel sorting algorithm and can parallellize the iteraions. It is hard for 'mem_heavy.cpp' to benefit from parallelism because of the memory bound.'point_iter.cpp' benefits a lot from parallelized iteration but it is too slow.
 
 MPI was tried by having processes to split the file and start their own octree. Results are very bad. The skewness of the octree makes balancing workload very difficult. The number of bins for each process is only slightly smaller than the single process case. Plus, reduction in the number of points benifits the 'point_iter' algorithm only. To scale up using MPI, all processes need to reach consensus on the point count of every octant. For 1M bins, that is 8MB data each process. The data needs to be broadcasted, which is an unacceptable cost to have. 
+
+# Thanks
+Thanks Professor Stadler for actively supporting.
+Thanks to the author of https://www.forceflow.be/2013/10/07/morton-encodingdecoding-through-bit-interleaving-implementations/ for the morton encoding algorithms.
