@@ -4,7 +4,7 @@ The project is very experimental. Directly modify the source code to try differe
 
 ## To run the project, you need:
 
-  A point cloud in .bin format
+  A point cloud in .bin format. The provided one is a small one fused from point clouds from the KITTI Dataset. If you want to test the program with it, please change the point cloud size as described below. Or even though it may not break anything, use it at your own risk. 
   
   The p4est library, which can be found at: https://github.com/cburstedde/p4est
   
