@@ -16,7 +16,7 @@
 #define SIZE 18833843
 #define MAX_LAYERS 19 //follows the max_level possible defined by p4est
 #define TOTAL_LENGTH std::pow(2,MAX_LAYERS)
-#define PT_COUNT 100
+#define PT_COUNT 10
 //#define DBL_MAX std::numeric_limits<double>::max()
 //#define DBL_MIN std::numeric_limits<double>::min()
 void get_boundary(long data_size,double* data_ptr, double& max_x, double& max_y, double& max_z,double& min_x, double& min_y, double& min_z);
@@ -42,7 +42,7 @@ typedef struct
 }user_data_t;
 
 
-int refine_level = 17;
+int refine_level = 18;
 std::vector<long>* pts_discrete;
 std::vector<std::vector<long>*>* v;
 std::vector<long>* v_count;
@@ -297,6 +297,8 @@ int main(int argc, char** argv)
   double min_x,min_y,min_z = DBL_MAX;
   double max_x,max_y,max_z = DBL_MIN;
 
+  double t1 = MPI_Wtime();
+
   get_boundary(SIZE,randn,max_x,max_y,max_z,min_x,min_y,min_z);
   double initial_side_len;
   double res;
@@ -329,10 +331,10 @@ int main(int argc, char** argv)
   all_inds = new std::vector<long>(SIZE);   //delete at first run of refine, see do while loop
   std::generate(all_inds->begin(), all_inds->end(), [n = 0]() mutable { return n++ ; });
 
-  double t = MPI_Wtime();
+
   discretize(SIZE, randn, res, x_offset, y_offset, z_offset, pts_discrete);
-  double elapsed1 = MPI_Wtime() - t;
-  std::cerr << "Discretize Elapsed time: " << elapsed1 << std::endl;
+
+  //std::cerr << "Discretize Elapsed time: " << elapsed1 << std::endl;
   
   v->push_back(all_inds);
   //ind = 0;
@@ -359,6 +361,7 @@ int main(int argc, char** argv)
 
     p8est_refine (p8est, 0, refine_fn, init_fn);
 
+    //MPI_Allreduce(MPI_IN_PLACE, cnt_arr, LEN, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     //mpiret = sc_MPI_Barrier (mpi->mpicomm);
 
     //v->erase(v->begin(), v->begin()+to_destroy);
@@ -371,6 +374,9 @@ int main(int argc, char** argv)
     //std::cerr << w << std::endl;
   }while (num_quadrants != p8est->global_num_quadrants);
   double elapsed = MPI_Wtime() - tt;
+
+  double elapsed1 = MPI_Wtime() - t1;
+  std::cerr << "End-to-End Elapsed time: " << elapsed1 << std::endl;
 
   std::cerr << "Refine Elapsed time: " << elapsed << std::endl;
 

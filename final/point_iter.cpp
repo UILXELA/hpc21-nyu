@@ -17,10 +17,10 @@
 
 //#define SIZE 18833843
 #define SIZE 18833843
-#define PT_COUNT 100
+#define PT_COUNT 10
 
 const int MAX_LAYERS = 19; //follows the max_level possible defined by p4est
-const int MAX_REFINE_LEVEL = 17;
+const int MAX_REFINE_LEVEL = 19;
 const long TOTAL_LENGTH = std::pow(2,MAX_LAYERS);
 const long BTW_C = TOTAL_LENGTH/std::pow(2,MAX_REFINE_LEVEL+1);
 const long C_LENGTH = 2*TOTAL_LENGTH-1;

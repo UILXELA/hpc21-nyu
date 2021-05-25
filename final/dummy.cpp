@@ -132,6 +132,15 @@ void qsort3w(RanIt _First, RanIt _Last)
     }
 }
 
+template<class BidirIt>
+void parallel_sort(BidirIt _First, BidirIt _Last)
+{
+
+    #pragma omp parallel num_threads(12)
+    #pragma omp master
+        qsort3w(_First, _Last - 1);
+}
+
 
 
 typedef struct
@@ -237,11 +246,13 @@ static int
 my_refine_fn (p8est_t * p4est, p4est_topidx_t which_tree,
                 p8est_quadrant_t * quadrant)
 {
-
+  
   
   if (quadrant->level >= MAX_REFINE_LEVEL){
     return 0;
   }
+
+  if(true) return 1;
   user_data_t        *data = (user_data_t *) quadrant->p.user_data; 
 
   if (data->count < 0.8 * lowest_count){
@@ -342,10 +353,6 @@ int main(int argc, char** argv)
   
   double min_x,min_y,min_z = DBL_MAX;
   double max_x,max_y,max_z = DBL_MIN;
-  
-  
-  double t = MPI_Wtime();
-
 
   get_boundary(SIZE,original,max_x,max_y,max_z,min_x,min_y,min_z);
   double initial_side_len;
@@ -378,7 +385,7 @@ int main(int argc, char** argv)
   std::vector<unsigned int> pts_discrete = std::vector<unsigned int>(SIZE * 3);
 
 
-  
+  double t = MPI_Wtime();
   discretize(SIZE, original, res, x_offset, y_offset, z_offset, &pts_discrete);
 
   std::cerr << *(max_element(pts_discrete.begin(),pts_discrete.end())) << std::endl;
@@ -388,6 +395,9 @@ int main(int argc, char** argv)
   long* tmp = (long *)malloc(SIZE * sizeof(long));
   std::vector<uint64_t> bins = std::vector<uint64_t>(SIZE); 
   
+  double elapsed1 = MPI_Wtime() - t;
+  std::cerr << "Discretize Elapsed time: " << elapsed1 << std::endl;
+
 
   double start = omp_get_wtime();
    /*#pragma omp parallel
@@ -442,73 +452,12 @@ int main(int argc, char** argv)
   p4est_gloidx_t num_quadrants = p8est->global_num_quadrants;
   do{
     num_quadrants = p8est->global_num_quadrants;
-    //mpiret = sc_MPI_Barrier (mpi->mpicomm);
-    new_octants.clear();
+
 
     p8est_refine (p8est, 0, refine_fn, init_fn);
     
-    long count = 0;
-    #pragma omp parallel for schedule(static,1)
-    for (long i=0; i<new_octants.size(); i++){
-      uint64_t box_low;
-      uint64_t box_up;
-      user_data_t data = *(new_octants[i]);
-      long side_len = x_bound >> (data.level);
-      box_low = mortonEncode_magicbits((unsigned int) data.x, (unsigned int) data.y, (unsigned int) data.z);
-      box_up = mortonEncode_magicbits((unsigned int) data.x+side_len-1, (unsigned int) data.y+side_len-1, (unsigned int) data.z+side_len-1);
-
-      //std::cerr << side_len << std::endl;
-      //std::cerr << new_octants[i]->x << std::endl;
-      //std::cerr << new_octants[i]->y << std::endl;
-      //std::cerr << new_octants[i]->z << std::endl;
-      //std::cerr << std::endl;
-
-      new_octants[i]->lower = bin_search(bins,data.parent_lower,data.parent_upper,box_low);
-      new_octants[i]->upper = bin_search(bins,data.parent_lower,data.parent_upper,box_up)-1;
-      new_octants[i]->count = new_octants[i]->upper-new_octants[i]->lower+1;
-      //count += new_octants[i]->count; 
-      //std::cerr << data->count << std::endl;
-      //std::cerr << data->lower << std::endl;
-      //std::cerr << data->upper << std::endl;
-      //std::cerr << box_low << std::endl;
-      //std::cerr << box_up << std::endl;
-      //std::cerr << new_octants[i]->x << " " << new_octants[i]->y << " " << new_octants[i]->z << std::endl;
-      //MPI_Allreduce(MPI_IN_PLACE, cnt_arr, LEN, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-
-    }
-    //std::cerr << count << std::endl;
-    //std::cerr << new_octants.size() << std::endl;
-
-    MPI_Barrier(MPI_COMM_WORLD);
-    
-    /*
-    int i=0;
-    
-    for(auto const & it: octants_map){
-      i++;
-      std::cerr << ((it).second)->c_x << "  ";
-      std::cerr << ((it).second)->c_y << "  ";
-      std::cerr << ((it).second)->c_z << " " << i << std::endl;
-    }
-    */
-
-
-
-    //mpiret = sc_MPI_Barrier (mpi->mpicomm);
-
-    //v->erase(v->begin(), v->begin()+to_destroy);
-    //to_destroy = to_destroy << 3;
-    //long w = 0;
-    //for (auto it = v->begin();it<v->end();it++){
-    //  w += (*it)->size();
-    //}
-    //std::cerr << "Period size ";
-    //std::cerr << w << std::endl;
   }while (num_quadrants != p8est->global_num_quadrants);
   double elapsed = MPI_Wtime() - tt;
-
-  double elapsed1 = MPI_Wtime() - t;
-  std::cerr << "End-to-End Elapsed time: " << elapsed1 << std::endl;
 
   std::cerr << "Refine Elapsed time: " << elapsed << std::endl;
 
